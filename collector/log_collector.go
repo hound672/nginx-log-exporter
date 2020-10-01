@@ -16,7 +16,8 @@ import (
 type Collector struct {
 	countTotal      *prometheus.CounterVec
 	bytesTotal      *prometheus.CounterVec
-	upstreamSeconds *prometheus.HistogramVec
+	//upstreamSeconds *prometheus.HistogramVec
+	upstreamSeconds *prometheus.CounterVec
 	responseSeconds *prometheus.HistogramVec
 
 	staticValues    []string
@@ -46,7 +47,7 @@ func NewCollector(cfg *config.AppConfig) *Collector {
 			Help:      "Total amount of transferred bytes",
 		}, labels),
 
-		upstreamSeconds: prometheus.NewHistogramVec(prometheus.HistogramOpts{
+		upstreamSeconds: prometheus.NewCounterVec(prometheus.CounterOpts{
 			Namespace: cfg.Name,
 			Name:      "http_upstream_time_seconds",
 			Help:      "Time needed by upstream servers to handle requests",
@@ -112,7 +113,7 @@ func (c *Collector) Run() {
 				}
 
 				if upstreamTime, err := entry.FloatField("upstream_response_time"); err == nil {
-					c.upstreamSeconds.WithLabelValues(labelValues...).Observe(upstreamTime)
+					c.upstreamSeconds.WithLabelValues(labelValues...).Add(upstreamTime)
 				}
 
 				if responseTime, err := entry.FloatField("request_time"); err == nil {
